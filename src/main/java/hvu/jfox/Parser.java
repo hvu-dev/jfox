@@ -1,5 +1,6 @@
 package hvu.jfox;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Parser {
@@ -14,6 +15,7 @@ public class Parser {
     }
 
     Expr parse() {
+        List<Stmt> statements = new ArrayList<Stmt>();
         try {
             return expression();
         } catch (ParseError error) {
@@ -35,40 +37,6 @@ public class Parser {
         }
 
         return expr;
-    }
-
-    private Token previous() {
-        return tokens.get(current - 1);
-    }
-
-    private boolean check(TokenType type) {
-        // TODO: why do we need to check isAtEnd here?
-        if (isAtEnd()) return false;
-        return peek().type == type;
-    }
-
-    private boolean match(TokenType... types) {
-        for (TokenType type : types) {
-            if (check(type)) {
-                advance();
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private Token advance() {
-        if (!isAtEnd()) current++;
-        return previous();
-    }
-
-    private boolean isAtEnd() {
-        return peek().type == TokenType.EOF;
-    }
-
-    private Token peek() {
-        return tokens.get(current);
     }
 
     private Expr comparison() {
@@ -132,15 +100,49 @@ public class Parser {
         throw error(peek(), "Expected expression");
     }
 
-    private ParseError error(Token token, String message) {
-        Main.error(token, message);
-        return new ParseError();
+    private Token previous() {
+        return tokens.get(current - 1);
+    }
+
+    private Token advance() {
+        if (!isAtEnd()) current++;
+        return previous();
+    }
+
+    private boolean isAtEnd() {
+        return peek().type == TokenType.EOF;
+    }
+
+    private Token peek() {
+        return tokens.get(current);
+    }
+
+    private boolean check(TokenType type) {
+        // TODO: why do we need to check isAtEnd here?
+        if (isAtEnd()) return false;
+        return peek().type == type;
+    }
+
+    private boolean match(TokenType... types) {
+        for (TokenType type : types) {
+            if (check(type)) {
+                advance();
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private Token consume(TokenType type, String errorMessage) {
         if (check(type)) return advance();
 
         throw error(peek(), errorMessage);
+    }
+
+    private ParseError error(Token token, String message) {
+        Main.error(token, message);
+        return new ParseError();
     }
 
     private void synchronize() {

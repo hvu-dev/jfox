@@ -93,3 +93,22 @@ Expression -------> Vistor action
 
 Only the expression itself knows which action they should take, hence it will call the correct action which will be declared by the "Visitor" class.   
 ```
+- Many static-typed languages (Like Java) perform type check at run-time. It allows more flexibility while still keeping the integrity of the data. In general, types info are usually kept within compiler/interpreter itself rather than regarding memory/instructions specific. As compiler and interpreter are well aware of memory layout, they can easily retrieve the data from memory and then load it to a variable of a specific type (which is defined by the compiler/interpreter). Read more: [How do variables in C++ store their type?](https://softwareengineering.stackexchange.com/a/380349) and [Type Safety](https://en.wikipedia.org/wiki/Type_safety).
+- Expression is what produces value, Statement is only for declaration (perform an action). Expression can be a part of statement, but not the way around. 
+```
+var a = 1 + 2;
+       -------
+          ↑  
+      expression -> produce a value
+---------------
+       ↑
+    statement -> perform an assignment (a side-effect)
+```
+- Everytime we add a new syntax (Token/Expr/Stmt/etc), we're going to update the grammar rules.
+```
+program        → statement* EOF ;
+statement      → exprStmt | printStmt ;
+exprStmt       → expression ";" ;
+printStmt      → "print" expression ";" ;
+```
+- Starting rule of this language is `program`, somewhat similar to a starting rule of Python `file: [statements] ENDMARKER` ([Python's Grammar](https://docs.python.org/3/reference/grammar.html)) 
