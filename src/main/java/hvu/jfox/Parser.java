@@ -1,5 +1,6 @@
 package hvu.jfox;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Parser {
@@ -13,16 +14,85 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    Expr parse() {
+    List<Stmt> parse() {
+        List<Stmt> statements = new ArrayList<Stmt>();
+        while (!isAtEnd()) {
+            statements.add(declaration());
+        }
+
+        return statements;
+    }
+
+    /* Grammar functions */
+    private Stmt declaration() {
         try {
-            return expression();
+            if (match(TokenType.VAR)) return varDeclaration();
+
+            return statement();
         } catch (ParseError error) {
+            synchronize();
             return null;
         }
     }
 
+    private Stmt varDeclaration() {
+        Token name = consume(TokenType.IDENTIFIER, "Expected variable name.");
+
+        Expr initializer = null;
+        if (match(TokenType.EQUAL)) {
+            initializer = expression();
+        }
+
+        consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
+        return new Stmt.Var(name, initializer);
+    }
+
+    private Stmt statement() {
+        if (match(TokenType.PRINT)) return printStatement();
+        if (match(TokenType.LEFT_BRACE)) return new Stmt.Block(blockStatement());
+        return expressionStatement();
+    }
+
+    private Stmt expressionStatement() {
+        Expr expr = expression();
+        consume(TokenType.SEMICOLON, "Expect ';' after expression.");
+        return new Stmt.Expression(expr);
+    }
+
+    private Stmt printStatement() {
+        Expr value = expression();
+        consume(TokenType.SEMICOLON, "Expect ';' after value.");
+        return new Stmt.Print(value);
+    }
+
+    private List<Stmt> blockStatement() {
+        List<Stmt> statements = new ArrayList<Stmt>();
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            statements.add(declaration());
+        }
+
+        consume(TokenType.RIGHT_BRACE, "Expect '}' after block");
+        return statements;
+    }
+
     private Expr expression() {
-        return equality();
+        return assignment();
+    }
+
+    private Expr assignment() {
+        Expr expr = equality();
+        if(match(TokenType.EQUAL)) {
+            Token equals = previous();
+            Expr value = assignment();
+            if (expr instanceof Expr.Variable) {
+                Token name = ((Expr.Variable)expr).name;
+                return new Expr.Assign(name, value);
+            }
+
+            error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
     }
 
     private Expr equality() {
@@ -35,40 +105,6 @@ public class Parser {
         }
 
         return expr;
-    }
-
-    private Token previous() {
-        return tokens.get(current - 1);
-    }
-
-    private boolean check(TokenType type) {
-        // TODO: why do we need to check isAtEnd here?
-        if (isAtEnd()) return false;
-        return peek().type == type;
-    }
-
-    private boolean match(TokenType... types) {
-        for (TokenType type : types) {
-            if (check(type)) {
-                advance();
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private Token advance() {
-        if (!isAtEnd()) current++;
-        return previous();
-    }
-
-    private boolean isAtEnd() {
-        return peek().type == TokenType.EOF;
-    }
-
-    private Token peek() {
-        return tokens.get(current);
     }
 
     private Expr comparison() {
@@ -123,6 +159,7 @@ public class Parser {
         if (match(TokenType.NIL)) return new Expr.Literal(null);
 
         if (match(TokenType.STRING, TokenType.NUMBER)) return new Expr.Literal(previous().literal);
+        if (match(TokenType.IDENTIFIER)) return new Expr.Variable(previous());
         if (match(TokenType.LEFT_PAREN)) {
             Expr expr = expression();
             consume(TokenType.RIGHT_PAREN, "Expect ')' after expression");
@@ -131,16 +168,52 @@ public class Parser {
 
         throw error(peek(), "Expected expression");
     }
+    /* End grammar  functions */
 
-    private ParseError error(Token token, String message) {
-        Main.error(token, message);
-        return new ParseError();
+    /* Utility functions */
+    private Token previous() {
+        return tokens.get(current - 1);
+    }
+
+    private Token advance() {
+        if (!isAtEnd()) current++;
+        return previous();
+    }
+
+    private boolean isAtEnd() {
+        return peek().type == TokenType.EOF;
+    }
+
+    private Token peek() {
+        return tokens.get(current);
+    }
+
+    private boolean check(TokenType type) {
+        // TODO: why do we need to check isAtEnd here?
+        if (isAtEnd()) return false;
+        return peek().type == type;
+    }
+
+    private boolean match(TokenType... types) {
+        for (TokenType type : types) {
+            if (check(type)) {
+                advance();
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private Token consume(TokenType type, String errorMessage) {
         if (check(type)) return advance();
 
         throw error(peek(), errorMessage);
+    }
+
+    private ParseError error(Token token, String message) {
+        Main.error(token, message);
+        return new ParseError();
     }
 
     private void synchronize() {
@@ -164,4 +237,6 @@ public class Parser {
             advance();
         }
     }
+    /* End utility functions */
+
 }

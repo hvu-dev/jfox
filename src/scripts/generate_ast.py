@@ -1,6 +1,12 @@
-FILE_NAME = "Expr.java"
-BASE_CLASS_NAME = "Expr"
+#!/usr/bin/env python3
+
 EXPR_TYPES = {
+    "Assign": {
+        "args": [
+            {"type": "Token", "name": "name"},
+            {"type": "Expr", "name": "value"},
+        ]
+    },
     "Binary": {
         "args": [
             {"type": "Expr", "name": "left"},
@@ -20,13 +26,36 @@ EXPR_TYPES = {
             {"type": "Expr", "name": "right"},
         ]
     },
+    "Variable": {"args": [{"type": "Token", "name": "name"}]},
 }
 
 
-def define_types(types: dict):
+STMT_TYPES = {
+    "Block": {"args": [{"type": "List<Stmt>", "name": "statements"}]},
+    "Expression": {"args": [{"type": "Expr", "name": "expression"}]},
+    "Print": {"args": [{"type": "Expr", "name": "expression"}]},
+    "Var": {
+        "args": [
+            {"type": "Token", "name": "name"},
+            {"type": "Expr", "name": "initializer"},
+        ]
+    },
+}
+
+GEN_TYPES = [
+    {"file_name": "Expr.java", "types": EXPR_TYPES, "base_class_name": "Expr"},
+    {
+        "file_name": "Stmt.java",
+        "types": STMT_TYPES,
+        "base_class_name": "Stmt",
+    },
+]
+
+
+def define_types(types: dict, base_name: str):
     code = ""
     for class_name, value in types.items():
-        code += "static class " + class_name + " extends " + BASE_CLASS_NAME + " {"
+        code += "static class " + class_name + " extends " + base_name + " {"
         args = value["args"]
 
         args_def = ""
@@ -44,7 +73,7 @@ def define_types(types: dict):
         code += (
             "@Override <R> R accept(Visitor<R> visitor) {return visitor.visit"
             + class_name
-            + BASE_CLASS_NAME
+            + base_name
             + "(this); }"
         )
 
@@ -53,17 +82,17 @@ def define_types(types: dict):
     return code
 
 
-def define_visitors(types: dict):
+def define_visitors(types: dict, base_name: str):
     code = "interface Visitor<R> {"
     for class_name, value in types.items():
         code += (
             "R visit"
             + class_name
-            + BASE_CLASS_NAME
+            + base_name
             + "("
             + class_name
             + " "
-            + BASE_CLASS_NAME.lower()
+            + base_name.lower()
             + ");"
         )
 
@@ -71,22 +100,25 @@ def define_visitors(types: dict):
     return code
 
 
-def main(path=None):
-    file_path = path or f"src/main/java/hvu/jfox/{FILE_NAME}"
-    with open(file_path, "w+") as f:
+def define_ast(types, base_name, file_name, package_name='hvu.jfox'):
+    with open(file_name, "w+") as f:
         f.writelines(
             [
-                "package hvu.jfox;\n",
+                "package " + package_name + ";\n",
                 "import java.util.List;\n\n",
-                "abstract class " + BASE_CLASS_NAME + " {\n",
+                "abstract class " + base_name + " {\n",
+                "\nabstract <R> R accept(Visitor<R> visitor);",
+                define_types(types, base_name),
+                define_visitors(types, base_name),
+                "}\n",
             ]
         )
-        f.write("\nabstract <R> R accept(Visitor<R> visitor);")
 
-        f.writelines(define_types(EXPR_TYPES))
-        f.writelines(define_visitors(EXPR_TYPES))
-        f.write("}\n")
+
+def main(base_path: str):
+    for t in GEN_TYPES:
+        define_ast(t["types"], t["base_class_name"], f"{base_path}{t['file_name']}")
 
 
 if __name__ == "__main__":
-    main()
+    main("src/main/java/hvu/jfox/")

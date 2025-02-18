@@ -65,7 +65,6 @@ public class Scanner {
         return source.charAt(current);
     }
 
-
     private char peekNext() {
         if (current + 1 >= source.length()) return '\0';
         return source.charAt(current + 1);

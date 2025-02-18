@@ -93,3 +93,62 @@ Expression -------> Vistor action
 
 Only the expression itself knows which action they should take, hence it will call the correct action which will be declared by the "Visitor" class.   
 ```
+- Many static-typed languages (Like Java) perform type check at run-time. It allows more flexibility while still keeping the integrity of the data. In general, types info are usually kept within compiler/interpreter itself rather than regarding memory/instructions specific. As compiler and interpreter are well aware of memory layout, they can easily retrieve the data from memory and then load it to a variable of a specific type (which is defined by the compiler/interpreter). Read more: [How do variables in C++ store their type?](https://softwareengineering.stackexchange.com/a/380349) and [Type Safety](https://en.wikipedia.org/wiki/Type_safety).
+- Expression is what produces value, Statement is only for declaration (perform an action). Expression can be a part of statement, but not the way around. 
+```
+var a = 1 + 2;
+       |-----|
+          ↑  
+      expression -> produce a value
+|-------------|
+       ↑
+    statement -> perform an assignment (a side-effect)
+```
+- Everytime we add a new syntax (Token/Expr/Stmt/etc), we're going to update the grammar rules.
+```
+program        → statement* EOF ;
+statement      → exprStmt | printStmt ;
+exprStmt       → expression ";" ;
+printStmt      → "print" expression ";" ;
+```
+- Starting rule of this language is `program`, somewhat similar to a starting rule of Python `file: [statements] ENDMARKER` ([Python's Grammar](https://docs.python.org/3/reference/grammar.html))
+- Declaration statements are a little different from ordinary statements, now we add a distinguish statement type for it
+```
+program        → declaration* EOF ;
+declaration    → varDecl | statement ;
+statement      → exprStmt | printStmt ;
+varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
+```
+- When we have statement and declaration, we can assign a variable to an identifier and use that identifier as an expression that produce value. This grammar belongs to `primary`, the same category with `NUMBER`, `STRING`.
+```
+primary        → "true" | "false" | "nil"
+               | NUMBER | STRING
+               | "(" expression ")"
+               | IDENTIFIER ;
+```
+### Assignment
+```
+expression     → assignment ;
+assignment     → IDENTIFIER "=" assignment | equality ;
+```
+- In this language and C-derived languages, assignment is an expression while in Pascal/Python/Go, it's a statement.
+- Parser will not recognise a `l-value` until it get to `=` token.
+- Lexical scope (static scope): text in the program itself shows where a scope begins and ends >< dynamic scope: don't know what a name refers to until you execute the code.
+- Shadowing: a variable should stay within it scope without overriding the outer scope
+```
+var a = 1;
+{
+  var a = 2;
+  print a; // should print 2
+}
+print a; // should print 1;
+```
+- Block statement: surrounded by curly braces (can be an empty block)
+```
+statement      → exprStmt | printStmt | block ;
+block          → "{" declaration* "}" ;
+```
+### Error recovery
+- The parser recognise there is something wrong with the current token, it remembers that and then continue to go on to seek for any next possible error called: `error recovery`.
+- Runtime Environment: where all the identifier and memory are mapped.
+
