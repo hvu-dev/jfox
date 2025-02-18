@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 
 EXPR_TYPES = {
+    "Assign": {
+        "args": [
+            {"type": "Token", "name": "name"},
+            {"type": "Expr", "name": "value"},
+        ]
+    },
     "Binary": {
         "args": [
             {"type": "Expr", "name": "left"},
@@ -20,11 +26,20 @@ EXPR_TYPES = {
             {"type": "Expr", "name": "right"},
         ]
     },
+    "Variable": {"args": [{"type": "Token", "name": "name"}]},
 }
 
+
 STMT_TYPES = {
+    "Block": {"args": [{"type": "List<Stmt>", "name": "statements"}]},
     "Expression": {"args": [{"type": "Expr", "name": "expression"}]},
     "Print": {"args": [{"type": "Expr", "name": "expression"}]},
+    "Var": {
+        "args": [
+            {"type": "Token", "name": "name"},
+            {"type": "Expr", "name": "initializer"},
+        ]
+    },
 }
 
 GEN_TYPES = [
@@ -85,11 +100,11 @@ def define_visitors(types: dict, base_name: str):
     return code
 
 
-def define_ast(types, base_name, file_name):
+def define_ast(types, base_name, file_name, package_name='hvu.jfox'):
     with open(file_name, "w+") as f:
         f.writelines(
             [
-                "package hvu.jfox;\n",
+                "package " + package_name + ";\n",
                 "import java.util.List;\n\n",
                 "abstract class " + base_name + " {\n",
                 "\nabstract <R> R accept(Visitor<R> visitor);",

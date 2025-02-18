@@ -97,10 +97,10 @@ Only the expression itself knows which action they should take, hence it will ca
 - Expression is what produces value, Statement is only for declaration (perform an action). Expression can be a part of statement, but not the way around. 
 ```
 var a = 1 + 2;
-       -------
+       |-----|
           ↑  
       expression -> produce a value
----------------
+|-------------|
        ↑
     statement -> perform an assignment (a side-effect)
 ```
@@ -111,4 +111,44 @@ statement      → exprStmt | printStmt ;
 exprStmt       → expression ";" ;
 printStmt      → "print" expression ";" ;
 ```
-- Starting rule of this language is `program`, somewhat similar to a starting rule of Python `file: [statements] ENDMARKER` ([Python's Grammar](https://docs.python.org/3/reference/grammar.html)) 
+- Starting rule of this language is `program`, somewhat similar to a starting rule of Python `file: [statements] ENDMARKER` ([Python's Grammar](https://docs.python.org/3/reference/grammar.html))
+- Declaration statements are a little different from ordinary statements, now we add a distinguish statement type for it
+```
+program        → declaration* EOF ;
+declaration    → varDecl | statement ;
+statement      → exprStmt | printStmt ;
+varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
+```
+- When we have statement and declaration, we can assign a variable to an identifier and use that identifier as an expression that produce value. This grammar belongs to `primary`, the same category with `NUMBER`, `STRING`.
+```
+primary        → "true" | "false" | "nil"
+               | NUMBER | STRING
+               | "(" expression ")"
+               | IDENTIFIER ;
+```
+### Assignment
+```
+expression     → assignment ;
+assignment     → IDENTIFIER "=" assignment | equality ;
+```
+- In this language and C-derived languages, assignment is an expression while in Pascal/Python/Go, it's a statement.
+- Parser will not recognise a `l-value` until it get to `=` token.
+- Lexical scope (static scope): text in the program itself shows where a scope begins and ends >< dynamic scope: don't know what a name refers to until you execute the code.
+- Shadowing: a variable should stay within it scope without overriding the outer scope
+```
+var a = 1;
+{
+  var a = 2;
+  print a; // should print 2
+}
+print a; // should print 1;
+```
+- Block statement: surrounded by curly braces (can be an empty block)
+```
+statement      → exprStmt | printStmt | block ;
+block          → "{" declaration* "}" ;
+```
+### Error recovery
+- The parser recognise there is something wrong with the current token, it remembers that and then continue to go on to seek for any next possible error called: `error recovery`.
+- Runtime Environment: where all the identifier and memory are mapped.
+
