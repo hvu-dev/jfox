@@ -29,6 +29,7 @@ public class Scanner {
         put("this", TokenType.THIS);
         put("true", TokenType.TRUE);
         put("var", TokenType.VAR);
+        put("const", TokenType.CONST);
         put("while", TokenType.WHILE);
     }};
 

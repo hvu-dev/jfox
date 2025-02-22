@@ -48,10 +48,12 @@ abstract class Stmt {
     static class Var extends Stmt {
         final Token name;
         final Expr initializer;
+        final boolean editable;
 
-        Var(Token name, Expr initializer) {
+        Var(Token name, Expr initializer, boolean editable) {
             this.name = name;
             this.initializer = initializer;
+            this.editable = editable;
         }
 
         @Override
