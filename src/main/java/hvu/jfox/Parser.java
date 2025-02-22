@@ -26,7 +26,7 @@ public class Parser {
     /* Grammar functions */
     private Stmt declaration() {
         try {
-            if (match(TokenType.VAR)) return varDeclaration();
+            if (match(TokenType.VAR, TokenType.CONST)) return varDeclaration();
 
             return statement();
         } catch (ParseError error) {
@@ -36,15 +36,16 @@ public class Parser {
     }
 
     private Stmt varDeclaration() {
-        Token name = consume(TokenType.IDENTIFIER, "Expected variable name.");
+        boolean editable = previous().type != TokenType.CONST;
 
+        Token name = consume(TokenType.IDENTIFIER, "Expected variable name.");
         Expr initializer = null;
         if (match(TokenType.EQUAL)) {
             initializer = expression();
         }
 
         consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
-        return new Stmt.Var(name, initializer);
+        return new Stmt.Var(name, initializer, editable);
     }
 
     private Stmt statement() {
