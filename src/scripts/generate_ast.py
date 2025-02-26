@@ -20,6 +20,13 @@ EXPR_TYPES = {
             {"type": "Object", "name": "value"},
         ]
     },
+    "Logical": {
+        "args": [
+            {"type": "Expr", "name": "left"},
+            {"type": "Token", "name": "operator"},
+            {"type": "Expr", "name": "right"}
+        ]
+    },
     "Unary": {
         "args": [
             {"type": "Token", "name": "operator"},
@@ -34,12 +41,26 @@ STMT_TYPES = {
     "Block": {"args": [{"type": "List<Stmt>", "name": "statements"}]},
     "Expression": {"args": [{"type": "Expr", "name": "expression"}]},
     "Print": {"args": [{"type": "Expr", "name": "expression"}]},
+    "If": {
+        "args": [
+            {"type": "Expr", "name": "condition"},
+            {"type": "Stmt", "name": "thenBranch"},
+            {"type": "Stmt", "name": "elseBranch"},
+        ]
+    },
     "Var": {
         "args": [
             {"type": "Token", "name": "name"},
             {"type": "Expr", "name": "initializer"},
+            {"type": "boolean", "name": "editable"},
         ]
     },
+    "While": {
+        "args": [
+            {"type": "Expr", "name": "condition"},
+            {"type": "Stmt", "name": "body"},
+        ]
+    }
 }
 
 GEN_TYPES = [
@@ -100,7 +121,7 @@ def define_visitors(types: dict, base_name: str):
     return code
 
 
-def define_ast(types, base_name, file_name, package_name='hvu.jfox'):
+def define_ast(types, base_name, file_name, package_name="hvu.jfox"):
     with open(file_name, "w+") as f:
         f.writelines(
             [
