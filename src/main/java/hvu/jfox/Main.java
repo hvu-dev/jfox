@@ -56,8 +56,7 @@ public class Main {
     }
 
     static void runtimeError(RuntimeError error) {
-        System.err.println(error.getMessage() +
-                "\n[line " + error.token.line + "]");
+        System.err.println("\n[Line " + error.token.line + "] " + error.getMessage());
         hadRuntimeError = true;
     }
 

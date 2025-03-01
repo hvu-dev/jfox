@@ -39,6 +39,7 @@ EXPR_TYPES = {
 
 STMT_TYPES = {
     "Block": {"args": [{"type": "List<Stmt>", "name": "statements"}]},
+    "Break": {"args": [{"type": "Token", "name": "token"}]},
     "Expression": {"args": [{"type": "Expr", "name": "expression"}]},
     "Print": {"args": [{"type": "Expr", "name": "expression"}]},
     "If": {
