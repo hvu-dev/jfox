@@ -31,6 +31,7 @@ public class Scanner {
         put("var", TokenType.VAR);
         put("const", TokenType.CONST);
         put("while", TokenType.WHILE);
+        put("break", TokenType.BREAK);
     }};
 
     public Scanner(String source) {

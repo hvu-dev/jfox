@@ -54,7 +54,9 @@ public class Parser {
         if (match(TokenType.PRINT)) return printStatement();
         if (match(TokenType.FOR)) return forStatement();
         if (match(TokenType.WHILE)) return whileStatement();
+        if (match(TokenType.BREAK)) return breakStatement();
         if (match(TokenType.LEFT_BRACE)) return new Stmt.Block(blockStatement());
+
         return expressionStatement();
     }
 
@@ -143,6 +145,11 @@ public class Parser {
 
         consume(TokenType.RIGHT_BRACE, "Expect '}' after block");
         return statements;
+    }
+
+    private Stmt breakStatement() {
+        consume(TokenType.SEMICOLON, "Expect ';' after break");
+        return new Stmt.Break(previous());
     }
 
     private Expr expression() {

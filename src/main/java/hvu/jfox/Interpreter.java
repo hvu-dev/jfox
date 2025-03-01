@@ -11,6 +11,14 @@ class RuntimeError extends RuntimeException {
     }
 }
 
+
+class StopIteration extends RuntimeError {
+    StopIteration(Token token, String message) {
+        super(token, message);
+    }
+}
+
+
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     private  Environment environment = new Environment();
 
@@ -133,6 +141,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitBreakStmt(Stmt.Break stmt) {
+        throw new StopIteration(stmt.token, "Illegal 'break' statement outside iteration");
+    }
+
+    @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) {
         evaluate(stmt.expression);
         return null;
@@ -149,7 +162,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Void visitIfStmt(Stmt.If stmt) {
         if(isTruthy(evaluate(stmt.condition))) {
             execute(stmt.thenBranch);
-        } else {
+        } else if (stmt.elseBranch != null) {
             execute(stmt.elseBranch);
         }
 
@@ -171,7 +184,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitWhileStmt(Stmt.While stmt) {
         while (isTruthy(evaluate(stmt.condition))) {
-            execute(stmt.body);
+            try {
+                execute(stmt.body);
+            } catch (StopIteration ex) {
+                break;
+            }
         }
 
         return null;
