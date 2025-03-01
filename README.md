@@ -117,7 +117,7 @@ printStmt      → "print" expression ";" ;
 program        → declaration* EOF ;
 declaration    → varDecl | statement ;
 statement      → exprStmt | printStmt ;
-varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
+varDecl        → ("var" | "const") IDENTIFIER ( "=" expression )? ";" ;
 ```
 - When we have statement and declaration, we can assign a variable to an identifier and use that identifier as an expression that produce value. This grammar belongs to `primary`, the same category with `NUMBER`, `STRING`.
 ```
@@ -148,7 +148,35 @@ print a; // should print 1;
 statement      → exprStmt | printStmt | block ;
 block          → "{" declaration* "}" ;
 ```
+### Control flow
+```
+statement      → exprStmt | ifStmt | printStmt | block ;
+ifStmt         → "if" "(" expression ")" statement
+               ( "else" statement )? ;
+```
+- Short-circuit: evaluate left to right, as soon as we can guarantee the result of the logic we can go directly to evaluate the statements/expressions inside
+- In C, `||` (or) has the lower precedence than `&&` (and)
+```
+expression     → assignment ;
+assignment     → IDENTIFIER "=" assignment
+               | logic_or ;
+logic_or       → logic_and ( "or" logic_and )* ;
+logic_and      → equality ( "and" equality )* ;
+```
+- The logical here is pretty similar to `disjunction` and `conjunction` from Python grammar.
+```
+statement      → exprStmt
+               | ifStmt
+               | printStmt
+               | whileStmt
+               | block ;
+
+whileStmt      → "while" "(" expression ")" statement ;
+```
 ### Error recovery
 - The parser recognise there is something wrong with the current token, it remembers that and then continue to go on to seek for any next possible error called: `error recovery`.
 - Runtime Environment: where all the identifier and memory are mapped.
+
+### Turing machine
+- We can not compute all functions and can not prove all statements are true ([Computable functions](https://en.wikipedia.org/wiki/Computable_function), [Church-Turing thesis](https://en.wikipedia.org/wiki/Church%E2%80%93Turing_thesis))
 

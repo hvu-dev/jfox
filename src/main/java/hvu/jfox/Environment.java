@@ -5,7 +5,7 @@ import java.util.Map;
 
 class DefinedVariable {
     private Object value;
-    private boolean editable;
+    private final boolean editable;
 
     public DefinedVariable(Object value, boolean editable) {
         this.value = value;
