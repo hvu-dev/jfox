@@ -200,7 +200,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 execute(stmt);
             }
         } catch (RuntimeError error) {
-            Main.runtimeError(error);
+            Fox.runtimeError(error);
         }
     }
 

@@ -313,7 +313,7 @@ public class Parser {
     }
 
     private ParseError error(Token token, String message) {
-        Main.error(token, message);
+        Fox.error(token, message);
         return new ParseError();
     }
 
