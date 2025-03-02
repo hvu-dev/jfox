@@ -32,6 +32,19 @@ abstract class Stmt {
         }
     }
 
+    static class Continue extends Stmt {
+        final Token token;
+
+        Continue(Token token) {
+            this.token = token;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitContinueStmt(this);
+        }
+    }
+
     static class Expression extends Stmt {
         final Expr expression;
 
@@ -111,6 +124,8 @@ abstract class Stmt {
         R visitBlockStmt(Block stmt);
 
         R visitBreakStmt(Break stmt);
+
+        R visitContinueStmt(Continue stmt);
 
         R visitExpressionStmt(Expression stmt);
 

@@ -146,6 +146,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitContinueStmt(Stmt.Continue stmt) {
+        throw new StopIteration(stmt.token, "Illegal 'continue' statement outside iteration");
+    }
+
+    @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) {
         evaluate(stmt.expression);
         return null;
@@ -215,6 +220,9 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             this.environment = environment;
 
             for (Stmt statement: statements) {
+                if(statement instanceof Stmt.Continue) {
+                    break;
+                }
                 execute(statement);
             }
         } finally {

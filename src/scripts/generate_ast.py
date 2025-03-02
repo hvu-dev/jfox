@@ -24,7 +24,7 @@ EXPR_TYPES = {
         "args": [
             {"type": "Expr", "name": "left"},
             {"type": "Token", "name": "operator"},
-            {"type": "Expr", "name": "right"}
+            {"type": "Expr", "name": "right"},
         ]
     },
     "Unary": {
@@ -40,6 +40,7 @@ EXPR_TYPES = {
 STMT_TYPES = {
     "Block": {"args": [{"type": "List<Stmt>", "name": "statements"}]},
     "Break": {"args": [{"type": "Token", "name": "token"}]},
+    "Continue": {"args": [{"type": "Token", "name": "token"}]},
     "Expression": {"args": [{"type": "Expr", "name": "expression"}]},
     "Print": {"args": [{"type": "Expr", "name": "expression"}]},
     "If": {
@@ -61,7 +62,7 @@ STMT_TYPES = {
             {"type": "Expr", "name": "condition"},
             {"type": "Stmt", "name": "body"},
         ]
-    }
+    },
 }
 
 GEN_TYPES = [
