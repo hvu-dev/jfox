@@ -1,6 +1,15 @@
 package hvu.jfox;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+interface FoxCallable {
+    Object call(Interpreter interpreter, List<Object> arguments);
+
+    int arity();
+}
+
 
 class RuntimeError extends RuntimeException {
     final Token token;
@@ -18,9 +27,28 @@ class StopIteration extends RuntimeError {
     }
 }
 
+class Return extends RuntimeException {
+    final Object value;
+
+    Return(Object value) {
+        this.value = value;
+    }
+}
+
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
-    private  Environment environment = new Environment();
+    final Environment globals = new Environment();
+    private Environment environment = globals;
+
+    Interpreter() {
+        defineNativeFunctions();
+    }
+
+    private void defineNativeFunctions() {
+        for (Map.Entry<String, FoxCallable> entry : NativeFunctionFactory.createAll().entrySet()) {
+            globals.define(entry.getKey(), entry.getValue(), false);
+        }
+    }
 
     @Override
     public Object visitAssignExpr(Expr.Assign expr) {
@@ -77,7 +105,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             }
             case TokenType.SLASH -> {
                 checkNumberOperand(expr.operator, left, right);
-                if((double) right == 0) {
+                if ((double) right == 0) {
                     // Most of the language will throw ZeroDivisionError
                     throw new RuntimeError(expr.operator, "Zero division error: division must not be 0.");
                 }
@@ -87,6 +115,27 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 return null;
             }
         }
+    }
+
+    @Override
+    public Object visitCallExpr(Expr.Call expr) {
+        Object callee = evaluate(expr.callee);
+
+        List<Object> arguments = new ArrayList<>();
+        for (Expr argument : expr.arguments) {
+            arguments.add(evaluate(argument));
+        }
+
+        if (!(callee instanceof FoxCallable)) {
+            throw new RuntimeError(expr.paren, "Expect callable object");
+        }
+
+        FoxCallable function = (FoxCallable) callee;
+        if (arguments.size() != function.arity()) {
+            throw new RuntimeError(expr.paren, "Expected" + function.arity() + "arguments, got " + arguments.size() + "arguments instead.");
+        }
+
+        return function.call(this, arguments);
     }
 
     @Override
@@ -104,10 +153,10 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Object left = evaluate(expr.left);
 
         // Short-circuit
-        if(expr.operator.type == TokenType.OR) {
-            if(isTruthy(left)) return left;
+        if (expr.operator.type == TokenType.OR) {
+            if (isTruthy(left)) return left;
         } else {
-            if(!isTruthy(left)) return left;
+            if (!isTruthy(left)) return left;
         }
         return evaluate(expr.right);
     }
@@ -157,6 +206,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitFunctionStmt(Stmt.Function stmt) {
+        FoxFunction function = new FoxFunction(stmt, environment);
+        environment.define(stmt.name.lexeme, function, true);
+        return null;
+    }
+
+    @Override
     public Void visitPrintStmt(Stmt.Print stmt) {
         Object value = evaluate(stmt.expression);
         System.out.println(stringify(value));
@@ -164,8 +220,18 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitReturnStmt(Stmt.Return stmt) {
+        Object value = null;
+        if (stmt.expression != null) {
+            value = evaluate(stmt.expression);
+        }
+
+        throw new Return(value);
+    }
+
+    @Override
     public Void visitIfStmt(Stmt.If stmt) {
-        if(isTruthy(evaluate(stmt.condition))) {
+        if (isTruthy(evaluate(stmt.condition))) {
             execute(stmt.thenBranch);
         } else if (stmt.elseBranch != null) {
             execute(stmt.elseBranch);
@@ -178,11 +244,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Void visitVarStmt(Stmt.Var stmt) {
         Object value = null;
 
-        if(stmt.initializer != null) {
+        if (stmt.initializer != null) {
             value = evaluate(stmt.initializer);
         }
 
-        environment.define(stmt.name.lexeme, new DefinedVariable(value, stmt.editable));
+        environment.define(stmt.name.lexeme, value, stmt.editable);
         return null;
     }
 
@@ -201,7 +267,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     void interpret(List<Stmt> statements) {
         try {
-            for(Stmt stmt: statements) {
+            for (Stmt stmt : statements) {
                 execute(stmt);
             }
         } catch (RuntimeError error) {
@@ -209,25 +275,22 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
     }
 
-    private void execute(Stmt statement) {
-        statement.accept(this);
-    }
-
-    private void executeBlock(List<Stmt> statements, Environment environment) {
+    void executeBlock(List<Stmt> statements, Environment environment) {
         Environment previous = this.environment;
 
-        try  {
+        try {
             this.environment = environment;
 
-            for (Stmt statement: statements) {
-                if(statement instanceof Stmt.Continue) {
-                    break;
-                }
+            for (Stmt statement : statements) {
                 execute(statement);
             }
         } finally {
             this.environment = previous;
         }
+    }
+
+    private void execute(Stmt statement) {
+        statement.accept(this);
     }
 
     private boolean isTruthy(Object object) {

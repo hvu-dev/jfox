@@ -19,7 +19,7 @@ public class Scanner {
         put("else", TokenType.ELSE);
         put("false", TokenType.FALSE);
         put("for", TokenType.FOR);
-        put("function", TokenType.FUN);
+        put("function", TokenType.FUNCTION);
         put("if", TokenType.IF);
         put("nil", TokenType.NIL);
         put("or", TokenType.OR);

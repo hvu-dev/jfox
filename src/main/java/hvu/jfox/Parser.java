@@ -4,7 +4,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+enum FunctionType {
+    FUNCTION {
+        @Override
+        public String toString() {
+            return "function";
+        }
+    }
+}
+
 public class Parser {
+    private final int MAX_FUNCTION_ARGUMENTS = 255;
+
     private static class ParseError extends RuntimeException {
     }
 
@@ -27,6 +38,7 @@ public class Parser {
     /* Grammar functions */
     private Stmt declaration() {
         try {
+            if (match(TokenType.FUNCTION)) return functionDeclaration(FunctionType.FUNCTION);
             if (match(TokenType.VAR, TokenType.CONST)) return varDeclaration();
 
             return statement();
@@ -34,6 +46,28 @@ public class Parser {
             synchronize();
             return null;
         }
+    }
+
+    private Stmt functionDeclaration(FunctionType type) {
+        Token name = consume(TokenType.IDENTIFIER, "Expect " + type.toString() + " name.");
+        consume(TokenType.LEFT_PAREN, "Expect left parenthesis after" + type.toString() + " name.");
+
+        List<Token> parameters = new ArrayList<>();
+        if (!check(TokenType.RIGHT_PAREN)) {
+            do {
+                if (parameters.size() >= MAX_FUNCTION_ARGUMENTS) {
+                    error(peek(), type.toString() + "can't have more than" + MAX_FUNCTION_ARGUMENTS + "parameters");
+                }
+                parameters.add(consume(TokenType.IDENTIFIER, "Expect parameter name"));
+            } while (match(TokenType.COMMA));
+        }
+
+        consume(TokenType.RIGHT_PAREN, "Expect right parenthesis after parameters");
+        consume(TokenType.LEFT_BRACE, "Expect '{' before" + type.toString() + "body");
+
+        List<Stmt> body = blockStatement();
+
+        return new Stmt.Function(name, parameters, body);
     }
 
     private Stmt varDeclaration() {
@@ -54,6 +88,7 @@ public class Parser {
         if (match(TokenType.PRINT)) return printStatement();
         if (match(TokenType.FOR)) return forStatement();
         if (match(TokenType.WHILE)) return whileStatement();
+        if (match(TokenType.RETURN)) return returnStatement();
         if (match(TokenType.BREAK)) return breakStatement();
         if (match(TokenType.CONTINUE)) return continueStatement();
         if (match(TokenType.LEFT_BRACE)) return new Stmt.Block(blockStatement());
@@ -115,9 +150,7 @@ public class Parser {
 
         Stmt body = statement();
         if (increment != null) {
-            body = new Stmt.Block(Arrays.asList(
-                    body,
-                    new Stmt.Expression(increment)));
+            body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment)));
         }
 
         if (condition == null) condition = new Expr.Literal(true);
@@ -146,6 +179,16 @@ public class Parser {
 
         consume(TokenType.RIGHT_BRACE, "Expect '}' after block");
         return statements;
+    }
+
+    private Stmt returnStatement() {
+        Token keyword = previous();
+        Expr expr = null;
+        if(!check(TokenType.SEMICOLON)) {
+            expr = expression();
+        }
+        consume(TokenType.SEMICOLON, "Expect ';' after return's expression");
+        return new Stmt.Return(keyword, expr);
     }
 
     private Stmt breakStatement() {
@@ -257,7 +300,37 @@ public class Parser {
             return new Expr.Unary(operator, right);
         }
 
-        return primary();
+        return call();
+    }
+
+    private Expr call() {
+        Expr expr = primary();
+        while (true) {
+            if (match(TokenType.LEFT_PAREN)) {
+                expr = finishCall(expr);
+            } else {
+                break;
+            }
+        }
+
+        return expr;
+    }
+
+    private Expr finishCall(Expr callee) {
+        List<Expr> arguments = new ArrayList<Expr>();
+        if (!check(TokenType.RIGHT_PAREN)) {
+            do {
+                if (arguments.size() >= MAX_FUNCTION_ARGUMENTS) {
+                    // Maybe add a warning function
+                    error(peek(), "Maximum " + MAX_FUNCTION_ARGUMENTS + "arguments for function exceeded");
+                }
+                arguments.add(expression());
+            } while (match(TokenType.COMMA));
+        }
+
+        Token paren = consume(TokenType.RIGHT_PAREN, "Expect ')' after function's arguments");
+
+        return new Expr.Call(callee, paren, arguments);
     }
 
     private Expr primary() {
@@ -331,7 +404,7 @@ public class Parser {
 
             switch (peek().type) {
                 case TokenType.CLASS:
-                case TokenType.FUN:
+                case TokenType.FUNCTION:
                 case TokenType.VAR:
                 case TokenType.FOR:
                 case TokenType.IF:

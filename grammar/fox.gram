@@ -1,0 +1,49 @@
+program        → declaration* EOF ;
+declaration    → varDeclaration | funtionDeclaration | statement;
+statement      → exprStmt | printStmt ;
+varDecl        → ("var" | "const") IDENTIFIER ( "=" expression )? ";" ;
+functionDeclaration → "fun" function ;
+function       → IDENTIFIER "(" parameters? ")" block ;
+
+expression     → literal | unary | binary | grouping ;
+literal        → NUMBER | STRING | "true" | "false" | "nil" ;
+grouping       → "(" expression ")" ;
+unary          → ( "-" | "!" ) expression ;
+binary         → expression operator expression ;
+operator       → "==" | "!=" | "<" | "<=" | ">" | ">=" | "+"  | "-"  | "*" | "/" ;
+
+expression     → equality ;
+equality       → comparison ( ( "!=" | "==" ) comparison )* ;
+comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+term           → factor ( ( "-" | "+" ) factor )* ;
+factor         → unary ( ( "/" | "*" ) unary )* ;
+unary          → ( "!" | "-" ) unary | call ;
+call           → primary ( "(" arguments? ")" )* ;
+primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+arguments      → expression ( "," expression )* ;
+
+expression     → assignment ;
+assignment     → IDENTIFIER "=" assignment
+               | logic_or ;
+logic_or       → logic_and ( "or" logic_and )* ;
+logic_and      → equality ( "and" equality )* ;
+
+statement      →
+               | exprStmt
+               | ifStmt
+               | printStmt
+               | forStmt
+               | whileStmt
+               | returnStmt
+               | "break"
+               | "continue"
+               | block ";"
+
+ifStmt         → "if" "(" expression ")" statement
+               ( "else" statement )? ;
+forStmt        → "for" "(" ( varDecl | exprStmt | ";" )
+                 expression? ";"
+                 expression? ")" statement ;
+whileStmt      → "while" "(" expression ")" statement ;
+returnStmt     → "return" expression? ";" ;
+block          → "{" declaration* "}" ;
