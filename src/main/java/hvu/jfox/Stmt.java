@@ -58,6 +58,23 @@ abstract class Stmt {
         }
     }
 
+    static class Function extends Stmt {
+        final Token name;
+        final List<Token> params;
+        final List<Stmt> body;
+
+        Function(Token name, List<Token> params, List<Stmt> body) {
+            this.name = name;
+            this.params = params;
+            this.body = body;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitFunctionStmt(this);
+        }
+    }
+
     static class Print extends Stmt {
         final Expr expression;
 
@@ -68,6 +85,21 @@ abstract class Stmt {
         @Override
         <R> R accept(Visitor<R> visitor) {
             return visitor.visitPrintStmt(this);
+        }
+    }
+
+    static class Return extends Stmt {
+        final Token keyword;
+        final Expr expression;
+
+        Return(Token keyword, Expr expression) {
+            this.keyword = keyword;
+            this.expression = expression;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitReturnStmt(this);
         }
     }
 
@@ -129,7 +161,11 @@ abstract class Stmt {
 
         R visitExpressionStmt(Expression stmt);
 
+        R visitFunctionStmt(Function stmt);
+
         R visitPrintStmt(Print stmt);
+
+        R visitReturnStmt(Return stmt);
 
         R visitIfStmt(If stmt);
 

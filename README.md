@@ -173,6 +173,13 @@ statement      → exprStmt
 
 whileStmt      → "while" "(" expression ")" statement ;
 ```
+### Function call
+- Function should be aware of number of arguments, many languages allow user to pass as many arguments as they want, and only pick up the correct one to use (like JavaScript). Other may enforce user to pass the correct number of arguments (like Python).
+- Function should be able to identify arguments (for example: comma-separated)
+- Native functions are functions that built-in to the language
+- A language can allow user to define their own native functions using foreign function interface (FFI) - or native extension or native interface.
+- Managing environment is crucial for every programming language.
+- For each call of a function, we should create a new environment which contains parameters name and value. 
 ### Error recovery
 - The parser recognise there is something wrong with the current token, it remembers that and then continue to go on to seek for any next possible error called: `error recovery`.
 - Runtime Environment: where all the identifier and memory are mapped.
@@ -180,3 +187,5 @@ whileStmt      → "while" "(" expression ")" statement ;
 ### Turing machine
 - We can not compute all functions and can not prove all statements are true ([Computable functions](https://en.wikipedia.org/wiki/Computable_function), [Church-Turing thesis](https://en.wikipedia.org/wiki/Church%E2%80%93Turing_thesis))
 
+## Questions
+1. How can we separate all components?

@@ -37,8 +37,12 @@ public class Environment {
         this.enclosing = enclosing;
     }
 
-    void define(String name, DefinedVariable value) {
-        values.put(name, value);
+    void define(String name, Object value, boolean editable) {
+        values.put(name, new DefinedVariable(value, editable));
+    }
+
+    void define(String name, DefinedVariable variable) {
+        values.put(name, variable);
     }
 
     Object get(Token name) {
