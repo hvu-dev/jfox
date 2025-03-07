@@ -85,7 +85,6 @@ public class Parser {
 
     private Stmt statement() {
         if (match(TokenType.IF)) return ifStatement();
-        if (match(TokenType.PRINT)) return printStatement();
         if (match(TokenType.FOR)) return forStatement();
         if (match(TokenType.WHILE)) return whileStatement();
         if (match(TokenType.RETURN)) return returnStatement();
@@ -116,13 +115,6 @@ public class Parser {
         }
 
         return new Stmt.If(condition, ifBlock, elseBlock);
-    }
-
-    private Stmt printStatement() {
-        Expr value = expression();
-        // TODO: parse print as a function
-        consume(TokenType.SEMICOLON, "Expect ';' after value.");
-        return new Stmt.Print(value);
     }
 
     private Stmt forStatement() {

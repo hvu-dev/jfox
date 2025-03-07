@@ -23,7 +23,6 @@ public class Scanner {
         put("if", TokenType.IF);
         put("nil", TokenType.NIL);
         put("or", TokenType.OR);
-        put("print", TokenType.PRINT);
         put("return", TokenType.RETURN);
         put("super", TokenType.SUPER);
         put("this", TokenType.THIS);

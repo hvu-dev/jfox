@@ -75,19 +75,6 @@ abstract class Stmt {
         }
     }
 
-    static class Print extends Stmt {
-        final Expr expression;
-
-        Print(Expr expression) {
-            this.expression = expression;
-        }
-
-        @Override
-        <R> R accept(Visitor<R> visitor) {
-            return visitor.visitPrintStmt(this);
-        }
-    }
-
     static class Return extends Stmt {
         final Token keyword;
         final Expr expression;
@@ -162,8 +149,6 @@ abstract class Stmt {
         R visitExpressionStmt(Expression stmt);
 
         R visitFunctionStmt(Function stmt);
-
-        R visitPrintStmt(Print stmt);
 
         R visitReturnStmt(Return stmt);
 
