@@ -26,7 +26,7 @@ public class NativeFunctionFactory {
 
             @Override
             public String toString() {
-                return "<Built-in clock function>";
+                return "<Function clock built-in>";
             }
         };
     }
@@ -35,15 +35,27 @@ public class NativeFunctionFactory {
         return new FoxCallable() {
             @Override
             public Object call(Interpreter interpreter, List<Object> arguments) {
-                for(Object argument: arguments) {
-                    System.out.print(argument.toString());
+                int size = arguments.size();
+                for (int i = 0; i < size; i++) {
+                    System.out.print(arguments.get(i));
+
+                    if (i != size - 1) {
+                        System.out.print(" ");
+                    } else {
+                        System.out.println();
+                    }
                 }
                 return null;
             }
 
             @Override
             public int arity() {
-                return 255;
+                return -1;
+            }
+
+            @Override
+            public String toString() {
+                return "<Function print built-in>";
             }
         };
     }

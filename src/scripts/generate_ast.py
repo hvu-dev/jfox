@@ -56,7 +56,6 @@ STMT_TYPES = {
             {"type": "List<Stmt>", "name": "body"},
         ]
     },
-    "Print": {"args": [{"type": "Expr", "name": "expression"}]},
     "Return": {
         "args": [
             {"type": "Token", "name": "keyword"},
@@ -86,7 +85,7 @@ STMT_TYPES = {
 }
 
 GEN_TYPES = [
-    #     {"file_name": "Expr.java", "types": EXPR_TYPES, "base_class_name": "Expr"},
+    {"file_name": "Expr.java", "types": EXPR_TYPES, "base_class_name": "Expr"},
     {
         "file_name": "Stmt.java",
         "types": STMT_TYPES,
@@ -163,18 +162,5 @@ def main(base_path: str):
         define_ast(t["types"], t["base_class_name"], f"{base_path}{t['file_name']}")
 
 
-# if __name__ == "__main__":
-#     main("src/main/java/hvu/jfox/")
-
-
-def fib(n):
-    if n == 0:
-        return 0
-
-    if n == 1:
-        return 1
-
-    return fib(n - 1) + fib(n - 2)
-
-
-print(fib(50))
+if __name__ == "__main__":
+    main("src/main/java/hvu/jfox/")

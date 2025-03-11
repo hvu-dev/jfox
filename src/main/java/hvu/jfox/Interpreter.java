@@ -37,6 +37,7 @@ class Return extends RuntimeException {
 
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+    final int UNLIMITED_NUMBER_OF_ARGS = -1;
     final Environment globals = new Environment();
     private Environment environment = globals;
 
@@ -131,7 +132,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
 
         FoxCallable function = (FoxCallable) callee;
-        if (arguments.size() != function.arity()) {
+        if (arguments.size() != function.arity() && function.arity() != UNLIMITED_NUMBER_OF_ARGS) {
             throw new RuntimeError(expr.paren, "Expected" + function.arity() + "arguments, got " + arguments.size() + "arguments instead.");
         }
 
@@ -209,13 +210,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Void visitFunctionStmt(Stmt.Function stmt) {
         FoxFunction function = new FoxFunction(stmt, environment);
         environment.define(stmt.name.lexeme, function, true);
-        return null;
-    }
-
-    @Override
-    public Void visitPrintStmt(Stmt.Print stmt) {
-        Object value = evaluate(stmt.expression);
-        System.out.println(stringify(value));
         return null;
     }
 
