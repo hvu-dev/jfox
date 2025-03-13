@@ -93,7 +93,7 @@ public class Scanner {
         }
 
         if (isAtEnd()) {
-            Fox.error(line, "Unterminated string");
+            Fox.error(line, "Unterminated string", LogLevel.ERROR);
             return;
         }
 
@@ -195,7 +195,7 @@ public class Scanner {
                 } else if (isAlpha(c)) {
                     scanIdentifier();
                 } else {
-                    Fox.error(line, "Unexpected input character");
+                    Fox.error(line, "Unexpected input character", LogLevel.ERROR);
                 }
                 break;
         }

@@ -384,7 +384,7 @@ public class Parser {
     }
 
     private ParseError error(Token token, String message) {
-        Fox.error(token, message);
+        Fox.error(token, message, LogLevel.ERROR);
         return new ParseError();
     }
 
