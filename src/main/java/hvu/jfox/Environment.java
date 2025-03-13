@@ -41,10 +41,6 @@ public class Environment {
         values.put(name, new DefinedVariable(value, editable));
     }
 
-    void define(String name, DefinedVariable variable) {
-        values.put(name, variable);
-    }
-
     Object get(Token name) {
         if (values.containsKey(name.lexeme)) {
             return values.get(name.lexeme).getValue();
@@ -55,6 +51,10 @@ public class Environment {
         }
 
         throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
+    }
+
+    boolean has(String name) {
+        return values.containsKey(name);
     }
 
     void assign(Token name, Object value) {

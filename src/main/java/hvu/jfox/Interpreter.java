@@ -237,6 +237,9 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitVarStmt(Stmt.Var stmt) {
         Object value = null;
+        if (environment.has(stmt.name.lexeme)) {
+            Fox.warning(stmt.name, "Re-declare an existing variable");
+        }
 
         if (stmt.initializer != null) {
             value = evaluate(stmt.initializer);

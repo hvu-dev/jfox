@@ -8,6 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+enum LogLevel {
+    WARNING, ERROR
+}
+
 public class Fox {
     private static boolean hadError = false;
     private static boolean hadRuntimeError = false;
@@ -24,21 +28,35 @@ public class Fox {
         interpreter.interpret(statements);
     }
 
-    static void error(int line, String message) {
-        report(line, "", message);
+    static void error(int line, String message, LogLevel level) {
+        report(line, "", message, level);
     }
 
-    static void error(Token token, String message) {
+    static void error(Token token, String message, LogLevel level) {
         if (token.type == TokenType.EOF) {
-            report(token.line, " at end", message);
+            report(token.line, " at end", message, level);
         } else {
-            report(token.line, " at '" + token.lexeme + "'", message);
+            report(token.line, " at '" + token.lexeme + "'", message, level);
         }
     }
 
-    private static void report(int line, String where, String message) {
-        System.err.println(
-                "[Line: " + line + "] Error" + where + ": " + message);
+    static void warning(Token token, String message) {
+        if (token.type == TokenType.EOF) {
+            report(token.line, " at end", message, LogLevel.WARNING);
+        } else {
+            report(token.line, " at '" + token.lexeme + "'", message, LogLevel.WARNING);
+        }
+    }
+
+    private static void report(int line, String where, String message, LogLevel level) {
+        String levelText = "";
+        if (level == LogLevel.ERROR) {
+            levelText = "Error";
+        } else if (level == LogLevel.WARNING) {
+            levelText = "Warning";
+        }
+
+        System.err.println(levelText + " [Line: " + line + "]" + where + ": " + message);
         hadError = true;
     }
 
