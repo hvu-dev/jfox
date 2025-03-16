@@ -3,7 +3,9 @@ package hvu.jfox;
 import java.util.*;
 
 enum FuncType {
-    NONE, FUNCTION
+    NONE,
+    FUNCTION,
+    WHILE,
 }
 
 public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
@@ -67,7 +69,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitVariableExpr(Expr.Variable expr) {
-        if(builtInFunctions.contains(expr.name.lexeme)) {
+        if (builtInFunctions.contains(expr.name.lexeme)) {
             // Ignore built-in functions
             return null;
         }
@@ -104,11 +106,17 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitBreakStmt(Stmt.Break stmt) {
+        if (currentFunctionType != FuncType.WHILE) {
+            Fox.error(stmt.token, "Can not break outside loop");
+        }
         return null;
     }
 
     @Override
     public Void visitContinueStmt(Stmt.Continue stmt) {
+        if (currentFunctionType != FuncType.WHILE) {
+            Fox.error(stmt.token, "Can not continue outside loop");
+        }
         return null;
     }
 
@@ -120,6 +128,10 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
+        if (builtInFunctions.contains(stmt.name.lexeme)) {
+            Fox.error(stmt.name, "Re-define built-in function");
+        }
+
         declare(stmt.name);
         define(stmt.name);
 
@@ -130,7 +142,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitReturnStmt(Stmt.Return stmt) {
         if (currentFunctionType == FuncType.NONE) {
-            Fox.error(stmt.keyword, "Can't return from top-level code.");
+            Fox.error(stmt.keyword, "Can not return from top-level code.");
         }
         if (stmt.expression != null) {
             resolve(stmt.expression);
@@ -162,8 +174,13 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitWhileStmt(Stmt.While stmt) {
+        FuncType enclosingFunctionType = currentFunctionType;
+        currentFunctionType = FuncType.WHILE;
+
         resolve(stmt.condition);
         resolve(stmt.body);
+
+        currentFunctionType = enclosingFunctionType;
         return null;
     }
 

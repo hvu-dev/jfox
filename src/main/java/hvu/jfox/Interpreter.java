@@ -21,7 +21,6 @@ class RuntimeError extends RuntimeException {
     }
 }
 
-
 class StopIteration extends RuntimeError {
     StopIteration(Token token, String message) {
         super(token, message);
@@ -199,12 +198,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitBreakStmt(Stmt.Break stmt) {
-        throw new StopIteration(stmt.token, "Illegal 'break' statement outside iteration");
+        return null;
     }
 
     @Override
     public Void visitContinueStmt(Stmt.Continue stmt) {
-        throw new StopIteration(stmt.token, "Illegal 'continue' statement outside iteration");
+        return null;
     }
 
     @Override
@@ -261,7 +260,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         while (isTruthy(evaluate(stmt.condition))) {
             try {
                 execute(stmt.body);
-            } catch (StopIteration ex) {
+            } catch (StopIteration | Return ex) {
                 break;
             }
         }
