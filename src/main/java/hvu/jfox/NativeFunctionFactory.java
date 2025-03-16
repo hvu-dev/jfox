@@ -1,7 +1,8 @@
 package hvu.jfox;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class NativeFunctionFactory {
     static HashMap<String, FoxCallable> createAll() {
@@ -10,6 +11,10 @@ public class NativeFunctionFactory {
         nativeFunctions.put("clock", createClockCallable());
         nativeFunctions.put("print", createPrintCallable());
         return nativeFunctions;
+    }
+
+    static Set<String> builtInFunctionNames() {
+        return Stream.of("clock", "print").collect(Collectors.toSet());
     }
 
     private static FoxCallable createClockCallable() {

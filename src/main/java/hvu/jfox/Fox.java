@@ -25,18 +25,22 @@ public class Fox {
 
         if (hadError) return;
 
+        Resolver resolver = new Resolver(interpreter);
+        resolver.resolve(statements);
+
+        if (hadError) return;
         interpreter.interpret(statements);
     }
 
-    static void error(int line, String message, LogLevel level) {
-        report(line, "", message, level);
+    static void error(int line, String message) {
+        report(line, "", message, LogLevel.ERROR);
     }
 
-    static void error(Token token, String message, LogLevel level) {
+    static void error(Token token, String message) {
         if (token.type == TokenType.EOF) {
-            report(token.line, " at end", message, level);
+            report(token.line, " at end", message, LogLevel.ERROR);
         } else {
-            report(token.line, " at '" + token.lexeme + "'", message, level);
+            report(token.line, " at '" + token.lexeme + "'", message, LogLevel.ERROR);
         }
     }
 

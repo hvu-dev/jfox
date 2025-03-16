@@ -41,6 +41,10 @@ public class Environment {
         values.put(name, new DefinedVariable(value, editable));
     }
 
+    void define(String name, Object value) {
+        values.put(name, new DefinedVariable(value, true));
+    }
+
     Object get(Token name) {
         if (values.containsKey(name.lexeme)) {
             return values.get(name.lexeme).getValue();
@@ -74,5 +78,22 @@ public class Environment {
         }
 
         throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
+    }
+
+    Environment ancestor(Integer distance) {
+        Environment env = this;
+        for (int i = 0; i < distance; i++) {
+            env = env.enclosing;
+        }
+
+        return env;
+    }
+
+    public Object getAt(Integer distance, Token name) {
+        return ancestor(distance).get(name);
+    }
+
+    public void assignAt(Integer distance, Token name, Object value) {
+        ancestor(distance).define(name.lexeme, value);
     }
 }
