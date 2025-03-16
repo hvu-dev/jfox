@@ -1,6 +1,7 @@
 package hvu.jfox;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +41,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     final int UNLIMITED_NUMBER_OF_ARGS = -1;
     final Environment globals = new Environment();
     private Environment environment = globals;
+    private Map<Expr, Integer> locals = new HashMap<>();
 
     Interpreter() {
         defineNativeFunctions();
@@ -54,7 +56,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitAssignExpr(Expr.Assign expr) {
         Object value = evaluate(expr.value);
-        environment.assign(expr.name, value);
+        Integer distance = locals.get(expr);
+        if (distance != null) {
+            globals.assignAt(distance, expr.name, value);
+        } else {
+            globals.assign(expr.name, value);
+        }
 
         return value;
     }
@@ -181,7 +188,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitVariableExpr(Expr.Variable expr) {
-        return environment.get(expr.name);
+        return lookupVariable(expr, expr.name);
     }
 
     @Override
@@ -332,5 +339,19 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             return text;
         }
         return object.toString();
+    }
+
+    public void resolve(Expr expr, int i) {
+        locals.put(expr, i);
+    }
+
+    private Object lookupVariable(Expr expr, Token name) {
+        Integer distance = locals.get(expr);
+
+        if(distance != null) {
+            return environment.getAt(distance, name);
+        } else {
+            return globals.get(name);
+        }
     }
 }
