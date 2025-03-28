@@ -3,9 +3,16 @@ package hvu.jfox;
 import java.util.*;
 
 enum FuncType {
-    NONE,
     FUNCTION,
-    WHILE,
+    INITIALIZER,
+    METHOD,
+    NONE,
+    WHILE
+}
+
+enum ClassType {
+    CLASS,
+    NONE
 }
 
 public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
@@ -13,6 +20,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private final Stack<Map<String, Boolean>> scopes = new Stack<>();
     private final Set<String> builtInFunctions = NativeFunctionFactory.builtInFunctionNames();
     private FuncType currentFunctionType = FuncType.NONE;
+    private ClassType currentClass = ClassType.NONE;
 
     Resolver(Interpreter interpreter) {
         this.interpreter = interpreter;
@@ -44,6 +52,12 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitGetExpr(Expr.Get expr) {
+        resolve(expr.object);
+        return null;
+    }
+
+    @Override
     public Void visitGroupingExpr(Expr.Grouping expr) {
         resolve(expr.expression);
         return null;
@@ -58,6 +72,23 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitLogicalExpr(Expr.Logical expr) {
         resolve(expr.left);
         resolve(expr.right);
+        return null;
+    }
+
+    @Override
+    public Void visitSetExpr(Expr.Set expr) {
+        resolve(expr.value);
+        resolve(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitThisExpr(Expr.This expr) {
+        if (currentClass == ClassType.NONE) {
+            Fox.error(expr.keyword, "Can't use 'this' outside of a class.");
+            return null;
+        }
+        resolveLocal(expr, expr.keyword);
         return null;
     }
 
@@ -113,6 +144,31 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitClassStmt(Stmt.Class stmt) {
+        ClassType enclosingClass = currentClass;
+        currentClass = ClassType.CLASS;
+
+        declare(stmt.name);
+
+        beginScope();
+        // Why not declare and define right here?
+        scopes.peek().put("this", true);
+        for (Stmt.Function method : stmt.methods) {
+            FuncType localFuncType = FuncType.METHOD;
+            if (method.name.lexeme.equals("constructor")) {
+                localFuncType = FuncType.INITIALIZER;
+            }
+
+            resolveFunction(method, localFuncType);
+        }
+
+        define(stmt.name);
+        endScope();
+        currentClass = enclosingClass;
+        return null;
+    }
+
+    @Override
     public Void visitContinueStmt(Stmt.Continue stmt) {
         if (currentFunctionType != FuncType.WHILE) {
             Fox.error(stmt.token, "Can not continue outside loop");
@@ -145,6 +201,9 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             Fox.error(stmt.keyword, "Can not return from top-level code.");
         }
         if (stmt.expression != null) {
+            if (currentFunctionType == FuncType.INITIALIZER) {
+                Fox.error(stmt.keyword, "Can not return from a non-null value from constructor");
+            }
             resolve(stmt.expression);
         }
         return null;
@@ -239,7 +298,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private void resolveLocal(Expr expr, Token name) {
         // Start from the most inner scope.
         for (int i = scopes.size() - 1; i >= 0; i--) {
-            if (scopes.get(i).get(name.lexeme)) {
+            if (scopes.get(i).containsKey(name.lexeme)) {
                 interpreter.resolve(expr, scopes.size() - 1 - i);
                 return;
             }

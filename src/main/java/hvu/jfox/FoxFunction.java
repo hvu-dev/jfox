@@ -35,4 +35,10 @@ public class FoxFunction implements FoxCallable {
     public String toString() {
         return "<function " + declaration.name.lexeme + ">";
     }
+
+    public FoxFunction bind(FoxInstance instance) {
+        Environment environment = new Environment(closure);
+        environment.define("this", instance);
+        return new FoxFunction(declaration, environment);
+    }
 }

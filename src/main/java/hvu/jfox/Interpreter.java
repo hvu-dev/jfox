@@ -139,10 +139,18 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         FoxCallable function = (FoxCallable) callee;
         if (arguments.size() != function.arity() && function.arity() != UNLIMITED_NUMBER_OF_ARGS) {
-            throw new RuntimeError(expr.paren, "Expected" + function.arity() + "arguments, got " + arguments.size() + "arguments instead.");
+            throw new RuntimeError(expr.paren, "Expected " + function.arity() + " arguments, got " + arguments.size() + " arguments instead.");
         }
 
         return function.call(this, arguments);
+    }
+
+    @Override
+    public Object visitGetExpr(Expr.Get expr) {
+        Object object = evaluate(expr.object);
+        if(!(object instanceof FoxInstance)) throw new RuntimeError(expr.name, "Can only access properties from an instance");
+
+        return ((FoxInstance) object).get(expr.name);
     }
 
     @Override
@@ -166,6 +174,24 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             if (!isTruthy(left)) return left;
         }
         return evaluate(expr.right);
+    }
+
+    @Override
+    public Object visitSetExpr(Expr.Set expr) {
+        Object object = evaluate(expr.object);
+
+        if (!(object instanceof FoxInstance)) {
+            throw new RuntimeError(expr.name, "Non-instance don't have properties");
+        }
+
+        Object value = evaluate(expr.value);
+        ((FoxInstance) object).set(expr.name, value);
+        return value;
+    }
+
+    @Override
+    public Object visitThisExpr(Expr.This expr) {
+        return lookupVariable(expr, expr.keyword);
     }
 
     @Override
@@ -198,6 +224,19 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitBreakStmt(Stmt.Break stmt) {
+        return null;
+    }
+
+    @Override
+    public Void visitClassStmt(Stmt.Class stmt) {
+        environment.define(stmt.name.lexeme, null);
+        Map<String, FoxFunction> methods = new HashMap<>();
+        for (Stmt.Function method: stmt.methods) {
+            FoxFunction function = new FoxFunction(method, environment);
+            methods.put(method.name.lexeme, function);
+        }
+        FoxClass klass = new FoxClass(stmt.name.lexeme, methods);
+        environment.assign(stmt.name, klass);
         return null;
     }
 
@@ -260,7 +299,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         while (isTruthy(evaluate(stmt.condition))) {
             try {
                 execute(stmt.body);
-            } catch (StopIteration | Return ex) {
+            } catch (StopIteration ex) {
                 break;
             }
         }
@@ -273,7 +312,10 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             for (Stmt stmt : statements) {
                 execute(stmt);
             }
-        } catch (RuntimeError error) {
+        } catch (Return r) {
+            return;
+        }
+        catch (RuntimeError error) {
             Fox.runtimeError(error);
         }
     }

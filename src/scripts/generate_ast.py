@@ -21,6 +21,7 @@ EXPR_TYPES = {
             {"type": "List<Expr>", "name": "arguments"},
         ]
     },
+    "Get": {"args": [{"type": "Expr", "name": "object"}, {"type": "Token", "name": "name"}]},
     "Grouping": {"args": [{"type": "Expr", "name": "expression"}]},
     "Literal": {
         "args": [
@@ -32,6 +33,18 @@ EXPR_TYPES = {
             {"type": "Expr", "name": "left"},
             {"type": "Token", "name": "operator"},
             {"type": "Expr", "name": "right"},
+        ]
+    },
+    "Set": {
+        "args": [
+            {"type": "Expr", "name": "object"},
+            {"type": "Token", "name": "name"},
+            {"type": "Expr", "name": "value"},
+        ]
+    },
+    "This": {
+        "args": [
+            {"type": "Token", "name": "keyword"},
         ]
     },
     "Unary": {
@@ -47,6 +60,7 @@ EXPR_TYPES = {
 STMT_TYPES = {
     "Block": {"args": [{"type": "List<Stmt>", "name": "statements"}]},
     "Break": {"args": [{"type": "Token", "name": "token"}]},
+    "Class": {"args": [{"type": "Token", "name": "name"}, {"type": "List<Stmt.Function>", "name": "methods"}]},
     "Continue": {"args": [{"type": "Token", "name": "token"}]},
     "Expression": {"args": [{"type": "Expr", "name": "expression"}]},
     "Function": {
