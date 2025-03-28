@@ -1,9 +1,10 @@
 program        → declaration* EOF ;
-declaration    → varDeclaration | funtionDeclaration | statement;
+declaration    → classDeclaration | varDeclaration | functionDeclaration | statement;
 statement      → exprStmt | printStmt ;
-varDecl        → ("var" | "const") IDENTIFIER ( "=" expression )? ";" ;
+varDeclaration → ("var" | "const") IDENTIFIER ( "=" expression )? ";" ;
 functionDeclaration → "fun" function ;
 function       → IDENTIFIER "(" parameters? ")" block ;
+classDeclaration → "class" IDENTIFIER "{" function* "}";
 
 expression     → literal | unary | binary | grouping ;
 literal        → NUMBER | STRING | "true" | "false" | "nil" ;
@@ -18,13 +19,12 @@ comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary | call ;
-call           → primary ( "(" arguments? ")" )* ;
-primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+call           → primary ( "(" arguments? ")" | "." IDENTIFIER)* ;
+primary        → NUMBER | STRING | "true" | "false" | "nil" | "this" | "(" expression ")" ;
 arguments      → expression ( "," expression )* ;
 
 expression     → assignment ;
-assignment     → IDENTIFIER "=" assignment
-               | logic_or ;
+assignment     → ( call "." )? IDENTIFIER "=" assignment | logic_or ;
 logic_or       → logic_and ( "or" logic_and )* ;
 logic_and      → equality ( "and" equality )* ;
 
