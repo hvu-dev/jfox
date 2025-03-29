@@ -5,10 +5,18 @@ import java.util.List;
 public class FoxFunction implements FoxCallable {
     private final Stmt.Function declaration;
     private final Environment closure;
+    private final boolean isStatic;
 
     FoxFunction(Stmt.Function declaration, Environment closure) {
         this.declaration = declaration;
         this.closure = closure;
+        this.isStatic = false;
+    }
+
+    FoxFunction(Stmt.Function declaration, Environment closure, boolean isStatic) {
+        this.declaration = declaration;
+        this.closure = closure;
+        this.isStatic = isStatic;
     }
 
     @Override
@@ -40,5 +48,9 @@ public class FoxFunction implements FoxCallable {
         Environment environment = new Environment(closure);
         environment.define("this", instance);
         return new FoxFunction(declaration, environment);
+    }
+
+    public boolean isStatic() {
+        return this.isStatic;
     }
 }

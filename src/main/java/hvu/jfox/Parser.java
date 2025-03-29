@@ -45,7 +45,7 @@ public class Parser {
     private Stmt declaration() {
         try {
             if (match(TokenType.CLASS)) return classDeclaration();
-            if (match(TokenType.FUNCTION)) return functionDeclaration(FunctionType.FUNCTION);
+            if (match(TokenType.FUNCTION)) return functionDeclaration(FunctionType.FUNCTION, false);
             if (match(TokenType.VAR, TokenType.CONST)) return varDeclaration();
 
             return statement();
@@ -61,14 +61,15 @@ public class Parser {
 
         List<Stmt.Function> methods = new ArrayList<>();
         while(!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            methods.add(functionDeclaration(FunctionType.METHOD));
+            boolean isStatic = match(TokenType.STATIC);
+            methods.add(functionDeclaration(FunctionType.METHOD, isStatic));
         }
 
         consume(TokenType.RIGHT_BRACE, "Expect '}' before class body");
         return new Stmt.Class(name, methods);
     }
 
-    private Stmt.Function functionDeclaration(FunctionType type) {
+    private Stmt.Function functionDeclaration(FunctionType type, boolean isStatic) {
         Token name = consume(TokenType.IDENTIFIER, "Expect " + type.toString() + " name.");
         consume(TokenType.LEFT_PAREN, "Expect left parenthesis after" + type.toString() + " name.");
 
@@ -87,7 +88,7 @@ public class Parser {
 
         List<Stmt> body = blockStatement();
 
-        return new Stmt.Function(name, parameters, body);
+        return new Stmt.Function(name, parameters, body, isStatic);
     }
 
     private Stmt varDeclaration() {

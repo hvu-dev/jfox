@@ -119,10 +119,10 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
          * F   T   T     F
          * F   F   F     T
          * */
-        if (!(scopes.isEmpty() || scopes.peek().get(expr.name.lexeme))) {
+        if (!(scopes.isEmpty() || isVariableInAnyScope(expr.name.lexeme))) {
             Fox.error(expr.name, "Can not access before initialization");
         }
-
+        // scopes.peek().get(expr.name.lexeme) == Boolean.TRUE
         resolveLocal(expr, expr.name);
         return null;
     }
@@ -148,9 +148,9 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         ClassType enclosingClass = currentClass;
         currentClass = ClassType.CLASS;
 
+        beginScope();
         declare(stmt.name);
 
-        beginScope();
         // Why not declare and define right here?
         scopes.peek().put("this", true);
         for (Stmt.Function method : stmt.methods) {
@@ -264,6 +264,16 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private void endScope() {
         scopes.pop();
+    }
+
+    private boolean isVariableInAnyScope(String name) {
+        for (int i = scopes.size() - 1; i >= 0; i--) {
+            if (scopes.get(i).containsKey(name)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void resolve(List<Stmt> statements) {

@@ -148,9 +148,24 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitGetExpr(Expr.Get expr) {
         Object object = evaluate(expr.object);
-        if(!(object instanceof FoxInstance)) throw new RuntimeError(expr.name, "Can only access properties from an instance");
+        if (object instanceof FoxClass) {
+            FoxFunction method = ((FoxClass) object).getMethodByName(expr.name.lexeme);
 
-        return ((FoxInstance) object).get(expr.name);
+            if(method != null && !method.isStatic()) {
+                throw new RuntimeError(expr.name, "Can only access properties from an instance");
+            }
+
+            return method;
+        }
+        else if(object instanceof FoxInstance) {
+            FoxFunction method = ((FoxInstance) object).klass.getMethodByName(expr.name.lexeme);
+            if(method != null && method.isStatic()) {
+                throw new RuntimeError(expr.name, "Can only access static method from a class");
+            }
+            return ((FoxInstance) object).get(expr.name);
+        } else {
+            throw new RuntimeError(expr.name, "Can only access properties from an instance");
+        }
     }
 
     @Override
@@ -232,7 +247,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         environment.define(stmt.name.lexeme, null);
         Map<String, FoxFunction> methods = new HashMap<>();
         for (Stmt.Function method: stmt.methods) {
-            FoxFunction function = new FoxFunction(method, environment);
+            FoxFunction function = new FoxFunction(method, environment, method.isStatic);
             methods.put(method.name.lexeme, function);
         }
         FoxClass klass = new FoxClass(stmt.name.lexeme, methods);

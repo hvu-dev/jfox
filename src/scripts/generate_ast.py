@@ -68,6 +68,7 @@ STMT_TYPES = {
             {"type": "Token", "name": "name"},
             {"type": "List<Token>", "name": "params"},
             {"type": "List<Stmt>", "name": "body"},
+            {"type": "boolean", "name": "isStatic"},
         ]
     },
     "Return": {
@@ -99,7 +100,7 @@ STMT_TYPES = {
 }
 
 GEN_TYPES = [
-    {"file_name": "Expr.java", "types": EXPR_TYPES, "base_class_name": "Expr"},
+#     {"file_name": "Expr.java", "types": EXPR_TYPES, "base_class_name": "Expr"},
     {
         "file_name": "Stmt.java",
         "types": STMT_TYPES,
