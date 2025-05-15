@@ -2,9 +2,9 @@ program        → declaration* EOF ;
 declaration    → classDeclaration | varDeclaration | functionDeclaration | statement;
 statement      → exprStmt | printStmt ;
 varDeclaration → ("var" | "const") IDENTIFIER ( "=" expression )? ";" ;
-functionDeclaration → "fun" function ;
+functionDeclaration → "function" function ;
 function       → IDENTIFIER "(" parameters? ")" block ;
-classDeclaration → "class" IDENTIFIER "{" function* "}";
+classDeclaration → "class" IDENTIFIER ("<" IDENTIFIER)? "{" function* "}";
 
 expression     → literal | unary | binary | grouping ;
 literal        → NUMBER | STRING | "true" | "false" | "nil" ;
@@ -20,7 +20,7 @@ term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary | call ;
 call           → primary ( "(" arguments? ")" | "." IDENTIFIER)* ;
-primary        → NUMBER | STRING | "true" | "false" | "nil" | "this" | "(" expression ")" ;
+primary        → NUMBER | STRING | "true" | "false" | "nil" | "this" | "(" expression ")" | "super" "." IDENTIFIER ;
 arguments      → expression ( "," expression )* ;
 
 expression     → assignment ;
