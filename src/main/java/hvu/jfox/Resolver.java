@@ -3,15 +3,12 @@ package hvu.jfox;
 import java.util.*;
 
 enum FuncType {
-    FUNCTION,
-    INITIALIZER,
-    METHOD,
-    NONE,
-    WHILE
+    FUNCTION, INITIALIZER, METHOD, NONE, WHILE
 }
 
 enum ClassType {
     CLASS,
+    SUBCLASS,
     NONE
 }
 
@@ -83,6 +80,16 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitSuperExpr(Expr.Super expr) {
+        if(currentClass != ClassType.SUBCLASS) {
+            Fox.error(expr.keyword, "'super' expression must be used inside a subclass");
+        }
+
+        resolveLocal(expr, expr.keyword);
+        return null;
+    }
+
+    @Override
     public Void visitThisExpr(Expr.This expr) {
         if (currentClass == ClassType.NONE) {
             Fox.error(expr.keyword, "Can't use 'this' outside of a class.");
@@ -150,6 +157,17 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
         declare(stmt.name);
 
+        if (stmt.superclass != null && stmt.name.lexeme.equals(stmt.superclass.name.lexeme)) {
+            Fox.error(stmt.superclass.name, "A class can't inherit from itself.");
+        }
+
+        if (stmt.superclass != null) {
+            currentClass = ClassType.SUBCLASS;
+            resolve(stmt.superclass);
+            beginScope();
+            scopes.peek().put("super", true);
+        }
+
         beginScope();
         // Why not declare and define right here?
         scopes.peek().put("this", true);
@@ -163,7 +181,10 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
 
         define(stmt.name);
+
         endScope();
+        if (stmt.superclass != null) endScope();
+
         currentClass = enclosingClass;
         return null;
     }

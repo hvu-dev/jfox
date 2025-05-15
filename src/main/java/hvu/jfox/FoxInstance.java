@@ -12,7 +12,7 @@ public class FoxInstance {
 
     @Override
     public String toString() {
-        return "<Instance: " + this.klass.name + ">";
+        return "<Instance: " + this.klass.getName() + ">";
     }
 
     Object get(Token name) {
@@ -23,7 +23,7 @@ public class FoxInstance {
         FoxFunction method = this.klass.getMethodByName(name.lexeme);
         if (method != null) return method.bind(this);
 
-        throw new RuntimeError(name, "Undefined property '" + name.lexeme + "' on " + this.klass.name + " instance");
+        throw new RuntimeError(name, "Undefined property '" + name.lexeme + "' on " + this.klass.getName() + " instance");
     }
 
     void set(Token name, Object value) {

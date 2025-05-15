@@ -40,7 +40,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     final int UNLIMITED_NUMBER_OF_ARGS = -1;
     final Environment globals = new Environment();
     private Environment environment = globals;
-    private Map<Expr, Integer> locals = new HashMap<>();
+    private final Map<Expr, Integer> locals = new HashMap<>();
 
     Interpreter() {
         defineNativeFunctions();
@@ -148,7 +148,8 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitGetExpr(Expr.Get expr) {
         Object object = evaluate(expr.object);
-        if(!(object instanceof FoxInstance)) throw new RuntimeError(expr.name, "Can only access properties from an instance");
+        if (!(object instanceof FoxInstance))
+            throw new RuntimeError(expr.name, "Can only access properties from an instance");
 
         return ((FoxInstance) object).get(expr.name);
     }
@@ -187,6 +188,20 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Object value = evaluate(expr.value);
         ((FoxInstance) object).set(expr.name, value);
         return value;
+    }
+
+    @Override
+    public Object visitSuperExpr(Expr.Super expr) {
+        int distance = locals.get(expr);
+        FoxClass superclass = (FoxClass) environment.getAt(distance, expr.keyword);
+        FoxInstance object = (FoxInstance) environment.getAt(distance - 1, "this");
+
+        FoxFunction method = superclass.getMethodByName(expr.method.lexeme);
+        if (method == null) {
+            throw new RuntimeError(expr.method, "Undefined property '" + expr.method.lexeme + "'");
+        }
+
+        return method.bind(object);
     }
 
     @Override
@@ -229,13 +244,32 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
+        Object superclass = null;
+        if (stmt.superclass != null) {
+            superclass = evaluate(stmt.superclass);
+            if (!(superclass instanceof FoxClass)) {
+                throw new RuntimeError(stmt.superclass.name, "Superclass must be a class");
+            }
+        }
+
         environment.define(stmt.name.lexeme, null);
+
+        if (stmt.superclass != null) {
+            environment = new Environment(environment);
+            environment.define("super", superclass);
+        }
+
         Map<String, FoxFunction> methods = new HashMap<>();
-        for (Stmt.Function method: stmt.methods) {
+        for (Stmt.Function method : stmt.methods) {
             FoxFunction function = new FoxFunction(method, environment);
             methods.put(method.name.lexeme, function);
         }
-        FoxClass klass = new FoxClass(stmt.name.lexeme, methods);
+        FoxClass klass = new FoxClass(stmt.name.lexeme, (FoxClass) superclass, methods);
+
+        if (superclass != null) {
+            environment = environment.enclosing;
+        }
+
         environment.assign(stmt.name, klass);
         return null;
     }
@@ -314,8 +348,9 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             }
         } catch (Return r) {
             return;
-        }
-        catch (RuntimeError error) {
+        } catch (RuntimeError error) {
+            Fox.runtimeError(error);
+        } catch (StackOverflowError error) {
             Fox.runtimeError(error);
         }
     }
@@ -389,7 +424,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     private Object lookupVariable(Expr expr, Token name) {
         Integer distance = locals.get(expr);
 
-        if(distance != null) {
+        if (distance != null) {
             return environment.getAt(distance, name);
         } else {
             return globals.get(name);

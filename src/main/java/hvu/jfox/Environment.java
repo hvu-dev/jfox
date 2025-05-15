@@ -93,6 +93,10 @@ public class Environment {
         return ancestor(distance).get(name);
     }
 
+    public Object getAt(Integer distance, String name) {
+        return ancestor(distance).values.get(name).getValue();
+    }
+
     public void assignAt(Integer distance, Token name, Object value) {
         ancestor(distance).define(name.lexeme, value);
     }

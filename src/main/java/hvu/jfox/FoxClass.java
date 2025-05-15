@@ -5,11 +5,13 @@ import java.util.Map;
 
 public class FoxClass implements FoxCallable {
     private final Map<String, FoxFunction> methods;
-    final String name;
+    private final FoxClass superclass;
+    private final String name;
 
-    public FoxClass(String name, Map<String, FoxFunction> methods) {
-        this.methods = methods;
+    public FoxClass(String name, FoxClass superclass, Map<String, FoxFunction> methods) {
         this.name = name;
+        this.superclass = superclass;
+        this.methods = methods;
     }
 
     @Override
@@ -39,7 +41,16 @@ public class FoxClass implements FoxCallable {
         return 0;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public FoxFunction getMethodByName(String name) {
-        return methods.get(name);
+        if(methods.containsKey(name)) {
+            return methods.get(name);
+        } else if (this.superclass != null) {
+            return this.superclass.getMethodByName(name);
+        }
+        return null;
     }
 }

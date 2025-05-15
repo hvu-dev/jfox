@@ -69,6 +69,13 @@ public class Fox {
         hadRuntimeError = true;
     }
 
+    static void runtimeError(Throwable error) {
+        if(error instanceof StackOverflowError) {
+            System.err.println("Max recursion depth reached.");
+        }
+        hadRuntimeError = true;
+    }
+
     static void runFile(String path) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));

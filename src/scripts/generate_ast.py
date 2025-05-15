@@ -42,6 +42,12 @@ EXPR_TYPES = {
             {"type": "Expr", "name": "value"},
         ]
     },
+    "Super": {
+        "args": [
+            {"type": "Token", "name": "keyword"},
+            {"type": "Token", "name": "method"},
+        ]
+    },
     "This": {
         "args": [
             {"type": "Token", "name": "keyword"},
@@ -60,7 +66,13 @@ EXPR_TYPES = {
 STMT_TYPES = {
     "Block": {"args": [{"type": "List<Stmt>", "name": "statements"}]},
     "Break": {"args": [{"type": "Token", "name": "token"}]},
-    "Class": {"args": [{"type": "Token", "name": "name"}, {"type": "List<Stmt.Function>", "name": "methods"}]},
+    "Class": {
+        "args": [
+            {"type": "Token", "name": "name"},
+            {"type": "Expr.Variable", "name": "superclass"},
+            {"type": "List<Stmt.Function>", "name": "methods"}
+        ]
+    },
     "Continue": {"args": [{"type": "Token", "name": "token"}]},
     "Expression": {"args": [{"type": "Expr", "name": "expression"}]},
     "Function": {
